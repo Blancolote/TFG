@@ -310,5 +310,8 @@ def transformToImageList(images: Tensor):
     N, C, H, W = images.shape
     image_sizes: List[Tuple[int, int]] = [(H, W)] * N
     image_list = ImageList(tensors=images, image_sizes=image_sizes)
+    print(f"Tipo mage_list: {type(image_list)}")
     image_list = image_list.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+    print(f"Tipo después image_list: {image_list}")
+    print(image_list.tensors)
     return image_list
