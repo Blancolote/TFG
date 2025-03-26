@@ -5,7 +5,7 @@ from torch import nn, Tensor
 from torch.nn import functional as F
 from torchvision.ops import boxes as box_ops, Conv2dNormActivation
 
-from . import _utils as det_utils
+from ._utils import _utils as det_utils
 
 # Import AnchorGenerator to keep compatibility.
 from .anchor_utils import AnchorGenerator  # noqa: 401
