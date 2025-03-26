@@ -112,10 +112,10 @@ class AnchorGenerator(nn.Module):
 
         return anchors
 
-    #bloque modificado --> ahora imageList no es ImageList, es tensor
-    def forward(self, image_list: Tensor, feature_maps: List[Tensor]) -> List[Tensor]:
+    #bloque modificado --> ahora imageList no es ImageList, es tens
+    def forward(self, image_list: ImageList, feature_maps: List[Tensor]) -> List[Tensor]:
         grid_sizes = [feature_map.shape[-2:] for feature_map in feature_maps]
-        image_size = image_list.shape[-2:]
+        image_size = image_list.tensors.shape[-2:]
         dtype, device = feature_maps[0].dtype, feature_maps[0].device
         strides = [
             [

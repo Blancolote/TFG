@@ -314,8 +314,4 @@ def transformToImageList(images: Tensor):
         image_sizes_list.append((image_size[0], image_size[1]))
 
     image_list = ImageList(images, image_sizes_list)
-    if torch.is_tensor(image_list):
-        raise ValueError("Que puta mierda")
-    else:
-        raise ValueError(f"Image list es {type(image_list)}")
     return image_list
