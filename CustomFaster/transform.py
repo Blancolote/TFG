@@ -302,7 +302,7 @@ def resize_boxes(boxes: Tensor, original_size: List[int], new_size: List[int]) -
     return torch.stack((xmin, ymin, xmax, ymax), dim=1)
 
 
-def transformToImageList(imagesTensor: Tensor):
+def transformToImageList(images: Tensor):
 
     images = [img for img in images]
     image_sizes = [img.shape[-2:] for img in images]
