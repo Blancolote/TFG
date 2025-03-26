@@ -80,7 +80,7 @@ class RPNHead(nn.Module):
         return logits, bbox_reg
 
 
-def permute_and_flatten(layer: Tensor, N: int, C: int, H: int, W: int) -> Tensor:
+def permute_and_flatten(layer: Tensor, N: int, A: int, C: int, H: int, W: int) -> Tensor:
     layer = layer.view(N, -1, C, H, W)
     layer = layer.permute(0, 3, 4, 1, 2)
     layer = layer.reshape(N, -1, C)
