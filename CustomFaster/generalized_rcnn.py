@@ -6,6 +6,8 @@ import warnings
 from collections import OrderedDict
 from typing import Dict, List, Optional, Tuple, Union
 
+from .transform import transformToImageList
+
 import torch
 from torch import nn, Tensor
 
@@ -102,7 +104,7 @@ class GeneralizedRCNN(nn.Module):
 
         #bloque modificado --> se añaden los logits del módulo de atención para que el modelo los devuelva y se tomarán como únicas imágenes los slices más representativos
         features, logits, new_images = self.backbone(images)
-
+        new_images = transformToImageList(new_images)
         #poner comprobación de logits
         
         #bloque modificado --> ahora el parámetro images ha sido sustituido por new_images y en vez de la función images_size que no sé cual es, 
