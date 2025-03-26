@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from torch import nn
 from torchvision.ops import MultiScaleRoIAlign
 
-import misc as misc_nn_ops
+from misc import misc as misc_nn_ops
 
 from .anchor_utils import AnchorGenerator
 from .generalized_rcnn import GeneralizedRCNN
