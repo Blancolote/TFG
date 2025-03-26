@@ -310,4 +310,5 @@ def transformToImageList(images: Tensor):
     N, C, H, W = images.shape
     image_sizes: List[Tuple[int, int]] = [(H, W)] * N
     image_list = ImageList(tensors=images, image_sizes=image_sizes)
+    image_list = image_list.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
     return image_list
