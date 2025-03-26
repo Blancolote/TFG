@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from torch import nn
 from torchvision.ops import MultiScaleRoIAlign
 
-from misc import misc as misc_nn_ops
+from .misc import Conv2dNormActivation
 
 from .anchor_utils import AnchorGenerator
 from .generalized_rcnn import GeneralizedRCNN
@@ -308,7 +308,7 @@ class FastRCNNConvFCHead(nn.Sequential):
         blocks = []
         previous_channels = in_channels
         for current_channels in conv_layers:
-            blocks.append(misc_nn_ops.Conv2dNormActivation(previous_channels, current_channels, norm_layer=norm_layer))
+            blocks.append(Conv2dNormActivation(previous_channels, current_channels, norm_layer=norm_layer))
             previous_channels = current_channels
         blocks.append(nn.Flatten())
         previous_channels = previous_channels * in_height * in_width
