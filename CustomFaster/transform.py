@@ -303,15 +303,5 @@ def resize_boxes(boxes: Tensor, original_size: List[int], new_size: List[int]) -
 
 
 def transformToImageList(images: Tensor):
-
-    images = [img for img in images]
-    image_sizes = [img.shape[-2:] for img in images]
-    image_sizes_list: List[Tuple[int, int]] = []
-    for image_size in image_sizes:
-        torch._assert(
-            len(image_size) == 2,
-            f"Input tensors expected to have in the last two elements H and W, instead got {image_size}",
-        )
-        image_sizes_list.append((image_size[0], image_size[1]))
-    image_list = ImageList(images, image_sizes_list)
-    return image_list
+    image_sizes = [tuple(img.shape[-2:]) for img in images]
+    return ImageList(images, image_sizes)
