@@ -4,7 +4,7 @@ from typing import Callable, List, Optional, Sequence, Tuple, Union
 import torch
 from torch import Tensor
 
-from .utils import _log_api_usage_once, _make_ntuple
+from ..utils import _log_api_usage_once, _make_ntuple
 
 
 interpolate = torch.nn.functional.interpolate
