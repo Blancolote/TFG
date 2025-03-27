@@ -248,6 +248,11 @@ class RegionProposalNetwork(torch.nn.Module):
         image_shapes: List[Tuple[int, int]],
         num_anchors_per_level: List[int],
     ) -> Tuple[List[Tensor], List[Tensor]]:
+        
+        #bloque modificado --> se ha añadido que proprosal y objectness sea de tipo float32 para que sea compatible con nms_kernel
+        original_dtype = proposals.dtype
+        proposals = proposals.float()
+        objectness = objectness.float()
 
         num_images = proposals.shape[0]
         device = proposals.device
@@ -293,6 +298,11 @@ class RegionProposalNetwork(torch.nn.Module):
             # keep only topk scoring predictions
             keep = keep[: self.post_nms_top_n()]
             boxes, scores = boxes[keep], scores[keep]
+
+            #bloque modificado --> se vuelven a convertir en bfloat 16 para evitar inconsistencias
+            if original_dtype != torch.float32:
+                boxes = boxes.to(torch.bfloat16)
+                scores = scores.to(torch.bfloat16)
 
             final_boxes.append(boxes)
             final_scores.append(scores)
