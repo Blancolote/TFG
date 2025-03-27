@@ -3,7 +3,7 @@ from typing import Dict, List, Optional, Tuple
 import torch
 from torch import nn, Tensor
 from torch.nn import functional as F
-import ops.boxes as box_ops
+from .ops import boxes as box_ops
 from torchvision.ops import Conv2dNormActivation
 
 
