@@ -8,6 +8,7 @@ from torch.nn import functional as F
 from torchvision.ops import complete_box_iou_loss, distance_box_iou_loss, FrozenBatchNorm2d, generalized_box_iou_loss
 
 
+#bloque modificado --> cambiada la clase entera porque randperm trabaja con int64 y no es válido en TPU
 class BalancedPositiveNegativeSampler:
     """
     This class samples batches, ensuring that they contain a fixed proportion of positives
@@ -21,6 +22,20 @@ class BalancedPositiveNegativeSampler:
         """
         self.batch_size_per_image = batch_size_per_image
         self.positive_fraction = positive_fraction
+
+    def random_selection(self, tensor: Tensor, num_samples: int) -> Tensor:
+        """
+        Randomly select num_samples elements from tensor using TPU-compatible operations
+        """
+        if tensor.numel() > 0 and num_samples > 0:
+            # Usar rand y topk para selección aleatoria
+            rand_scores = torch.rand(tensor.numel(), 
+                                   dtype=torch.float32, 
+                                   device=tensor.device)
+            _, indices = torch.topk(rand_scores,  #topk es más compatible que argsort en TPU
+                                  k=min(num_samples, tensor.numel()))
+            return tensor[indices.to(torch.int32)]
+        return tensor[:0]  # Retorna un tensor vacío si no hay elementos
 
     def __call__(self, matched_idxs: List[Tensor]) -> Tuple[List[Tensor], List[Tensor]]:
         """
@@ -41,7 +56,6 @@ class BalancedPositiveNegativeSampler:
         pos_idx = []
         neg_idx = []
 
-        #bloque modificado --> se ha cambiado la estructura internta de generar int64 porque no es compatible con TPU
         for matched_idxs_per_image in matched_idxs:
             matched_idxs_per_image = matched_idxs_per_image.to(torch.int32)
 
@@ -57,19 +71,20 @@ class BalancedPositiveNegativeSampler:
             # protect against not enough negative examples
             num_neg = min(negative.numel(), num_neg)
 
-            # randomly select positive and negative examples
-            perm1 = torch.randperm(positive.numel(), dtype=torch.int32, device=positive.device)[:num_pos]
-            perm2 = torch.randperm(negative.numel(), dtype=torch.int32, device=negative.device)[:num_neg]
-
-            pos_idx_per_image = positive[perm1]
-            neg_idx_per_image = negative[perm2]
+            # Usar random_selection en lugar de randperm
+            pos_idx_per_image = self.random_selection(positive, num_pos)
+            neg_idx_per_image = self.random_selection(negative, num_neg)
 
             # create binary mask from indices
-            pos_idx_per_image_mask = torch.zeros_like(matched_idxs_per_image, dtype=torch.uint8)
-            neg_idx_per_image_mask = torch.zeros_like(matched_idxs_per_image, dtype=torch.uint8)
+            pos_idx_per_image_mask = torch.zeros_like(
+                matched_idxs_per_image, dtype=torch.uint8)
+            neg_idx_per_image_mask = torch.zeros_like(
+                matched_idxs_per_image, dtype=torch.uint8)
 
-            pos_idx_per_image_mask[pos_idx_per_image] = 1
-            neg_idx_per_image_mask[neg_idx_per_image] = 1
+            if pos_idx_per_image.numel() > 0:
+                pos_idx_per_image_mask[pos_idx_per_image] = 1
+            if neg_idx_per_image.numel() > 0:
+                neg_idx_per_image_mask[neg_idx_per_image] = 1
 
             pos_idx.append(pos_idx_per_image_mask)
             neg_idx.append(neg_idx_per_image_mask)
