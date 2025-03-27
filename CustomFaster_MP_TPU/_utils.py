@@ -40,9 +40,15 @@ class BalancedPositiveNegativeSampler:
         """
         pos_idx = []
         neg_idx = []
+
+        #bloque modificado --> se ha cambiado la estructura internta de generar int64 porque no es compatible con TPU
         for matched_idxs_per_image in matched_idxs:
+            matched_idxs_per_image = matched_idxs_per_image.to(torch.int32)
+
             positive = torch.where(matched_idxs_per_image >= 1)[0]
             negative = torch.where(matched_idxs_per_image == 0)[0]
+            positive = positive.to(torch.int32)
+            negative = negative.to(torch.int32)
 
             num_pos = int(self.batch_size_per_image * self.positive_fraction)
             # protect against not enough positive examples
@@ -52,8 +58,8 @@ class BalancedPositiveNegativeSampler:
             num_neg = min(negative.numel(), num_neg)
 
             # randomly select positive and negative examples
-            perm1 = torch.randperm(positive.numel(), device=positive.device)[:num_pos]
-            perm2 = torch.randperm(negative.numel(), device=negative.device)[:num_neg]
+            perm1 = torch.randperm(positive.numel(), dtype=torch.int32, device=positive.device)[:num_pos]
+            perm2 = torch.randperm(negative.numel(), dtype=torch.int32, device=negative.device)[:num_neg]
 
             pos_idx_per_image = positive[perm1]
             neg_idx_per_image = negative[perm2]
