@@ -16,7 +16,7 @@ from ._box_convert import (
     _box_xyxy_to_xywh,
     _box_xyxyxyxy_to_xywhr,
 )
-from .._utils import _upcast
+from ._utils import _upcast
 
 
 def nms(boxes: Tensor, scores: Tensor, iou_threshold: float) -> Tensor:
