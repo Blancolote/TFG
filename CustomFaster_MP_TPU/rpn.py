@@ -326,6 +326,7 @@ class RegionProposalNetwork(torch.nn.Module):
         """
 
         sampled_pos_inds, sampled_neg_inds = self.fg_bg_sampler(labels)
+        print(type(sampled_pos_inds), type(sampled_neg_inds))
         sampled_pos_inds = torch.where(torch.cat(sampled_pos_inds, dim=0))[0].to(torch.int32)
         sampled_neg_inds = torch.where(torch.cat(sampled_neg_inds, dim=0))[0].to(torch.int32)
 
