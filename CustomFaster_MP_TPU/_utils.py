@@ -86,8 +86,8 @@ class BalancedPositiveNegativeSampler:
             if neg_idx_per_image.numel() > 0:
                 neg_idx_per_image_mask[neg_idx_per_image] = 1
 
-            pos_idx.append(pos_idx_per_image_mask)
-            neg_idx.append(neg_idx_per_image_mask)
+            pos_idx.append(pos_idx_per_image_mask.to(torch.int32))
+            neg_idx.append(neg_idx_per_image_mask.to(torch.int32))
 
         return pos_idx, neg_idx
 
