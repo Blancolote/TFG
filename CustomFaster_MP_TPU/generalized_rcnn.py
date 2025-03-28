@@ -17,7 +17,7 @@ try:
     import torch_xla
     import torch_xla.core.xla_model as xm
 except:
-    raise ImportError("xla it can not be imported because is not resolved or the encviroment is not with TPU")
+    raise ImportError("xla it can not be imported because is not resolved or the enviroment is not with TPU")
 
 
 class GeneralizedRCNN(nn.Module):
