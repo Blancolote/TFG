@@ -742,7 +742,7 @@ class RoIHeads(nn.Module):
         if targets is not None:
             for t in targets:
                 # TODO: https://github.com/pytorch/pytorch/issues/26731
-                floating_point_types = (torch.float, torch.double, torch.half)
+                floating_point_types = (torch.float, torch.double, torch.half, torch.bfloat16)
                 if not t["boxes"].dtype in floating_point_types:
                     raise TypeError(f"target boxes must of float type, instead got {t['boxes'].dtype}")
                 if not t["labels"].dtype == torch.int64:
