@@ -302,8 +302,8 @@ class RegionProposalNetwork(torch.nn.Module):
 
             #bloque modificado --> se vuelven a convertir en bfloat 16 para evitar inconsistencias
             if original_dtype != torch.float32:
-                boxes = boxes.to(torch.bfloat16)
-                scores = scores.to(torch.bfloat16)
+                boxes = boxes.to(torch.float32)
+                scores = scores.to(torch.float32)
 
             final_boxes.append(boxes)
             final_scores.append(scores)
