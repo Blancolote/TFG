@@ -7,6 +7,11 @@ from torch import nn, Tensor
 from torch.nn import functional as F
 from torchvision.ops import complete_box_iou_loss, distance_box_iou_loss, FrozenBatchNorm2d, generalized_box_iou_loss
 
+try: 
+    import torch_xla
+    import torch_xla.core.xla_model as xm
+except:
+    raise ImportError("xla it can not be imported because is not resolved or the enviroment is not with TPU")
 
 #bloque modificado --> cambiada la clase entera porque randperm trabaja con int64 y no es válido en TPU
 class BalancedPositiveNegativeSampler:
@@ -22,20 +27,6 @@ class BalancedPositiveNegativeSampler:
         """
         self.batch_size_per_image = batch_size_per_image
         self.positive_fraction = positive_fraction
-
-    def random_selection(self, tensor: Tensor, num_samples: int) -> Tensor:
-        """
-        Randomly select num_samples elements from tensor using TPU-compatible operations
-        """
-        if tensor.numel() > 0 and num_samples > 0:
-            # Usar rand y topk para selección aleatoria
-            rand_scores = torch.rand(tensor.numel(), 
-                                   dtype=torch.float32, 
-                                   device=tensor.device)
-            _, indices = torch.topk(rand_scores,  #topk es más compatible que argsort en TPU
-                                  k=min(num_samples, tensor.numel()))
-            return tensor[indices.to(torch.int32)]
-        return tensor[:0]  # Retorna un tensor vacío si no hay elementos
 
     def __call__(self, matched_idxs: List[Tensor]) -> Tuple[List[Tensor], List[Tensor]]:
         """
@@ -55,14 +46,9 @@ class BalancedPositiveNegativeSampler:
         """
         pos_idx = []
         neg_idx = []
-
         for matched_idxs_per_image in matched_idxs:
-            matched_idxs_per_image = matched_idxs_per_image.to(torch.int32)
-
             positive = torch.where(matched_idxs_per_image >= 1)[0]
             negative = torch.where(matched_idxs_per_image == 0)[0]
-            positive = positive.to(torch.int32)
-            negative = negative.to(torch.int32)
 
             num_pos = int(self.batch_size_per_image * self.positive_fraction)
             # protect against not enough positive examples
@@ -71,25 +57,25 @@ class BalancedPositiveNegativeSampler:
             # protect against not enough negative examples
             num_neg = min(negative.numel(), num_neg)
 
-            # Usar random_selection en lugar de randperm
-            pos_idx_per_image = self.random_selection(positive, num_pos)
-            neg_idx_per_image = self.random_selection(negative, num_neg)
+            # randomly select positive and negative examples
+            perm1 = torch.randperm(positive.numel(), device=xm.xla_device())[:num_pos]
+            perm2 = torch.randperm(negative.numel(), device=xm.xla_device())[:num_neg]
+
+            pos_idx_per_image = positive[perm1]
+            neg_idx_per_image = negative[perm2]
 
             # create binary mask from indices
-            pos_idx_per_image_mask = torch.zeros_like(
-                matched_idxs_per_image, dtype=torch.uint8)
-            neg_idx_per_image_mask = torch.zeros_like(
-                matched_idxs_per_image, dtype=torch.uint8)
+            pos_idx_per_image_mask = torch.zeros_like(matched_idxs_per_image, dtype=torch.uint8)
+            neg_idx_per_image_mask = torch.zeros_like(matched_idxs_per_image, dtype=torch.uint8)
 
-            if pos_idx_per_image.numel() > 0:
-                pos_idx_per_image_mask[pos_idx_per_image] = 1
-            if neg_idx_per_image.numel() > 0:
-                neg_idx_per_image_mask[neg_idx_per_image] = 1
+            pos_idx_per_image_mask[pos_idx_per_image] = 1
+            neg_idx_per_image_mask[neg_idx_per_image] = 1
 
-            pos_idx.append(pos_idx_per_image_mask.to(torch.int32))
-            neg_idx.append(neg_idx_per_image_mask.to(torch.int32))
+            pos_idx.append(pos_idx_per_image_mask)
+            neg_idx.append(neg_idx_per_image_mask)
 
         return pos_idx, neg_idx
+
 
 
 @torch.jit._script_if_tracing
