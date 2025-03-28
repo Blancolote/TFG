@@ -300,7 +300,7 @@ class RegionProposalNetwork(torch.nn.Module):
             keep = keep[: self.post_nms_top_n()]
             boxes, scores = boxes[keep], scores[keep]
 
-            #bloque modificado --> se vuelven a convertir en bfloat 16 para evitar inconsistencias
+            #bloque modificado --> se vuelven a convertir en float32 para evitar inconsistencias
             if original_dtype != torch.float32:
                 boxes = boxes.to(torch.float32)
                 scores = scores.to(torch.float32)

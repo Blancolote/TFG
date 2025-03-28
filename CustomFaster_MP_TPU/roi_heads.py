@@ -4,7 +4,7 @@ import torch
 import torch.nn.functional as F
 import torchvision
 from torch import nn, Tensor
-from torchvision.ops import boxes as box_ops, roi_align
+from .ops import boxes as box_ops, roi_align
 
 from . import _utils as det_utils
 
@@ -739,6 +739,7 @@ class RoIHeads(nn.Module):
             image_shapes (List[Tuple[H, W]])
             targets (List[Dict])
         """
+        #bloque modificado --> se ha añadido bfloat16 a floating_point_types
         if targets is not None:
             for t in targets:
                 # TODO: https://github.com/pytorch/pytorch/issues/26731
