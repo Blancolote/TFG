@@ -403,8 +403,8 @@ class RegionProposalNetwork(torch.nn.Module):
             labels, matched_gt_boxes = self.assign_targets_to_anchors(anchors, targets)
             regression_targets = self.box_coder.encode(matched_gt_boxes, anchors)
             print(objectness.shape)
-            print(labels.shape)
-            print(regression_targets.shape)
+            print(labels.size())
+            print(regression_targets.size())
  
             loss_objectness, loss_rpn_box_reg = self.compute_loss(
                 objectness, pred_bbox_deltas, labels, regression_targets
