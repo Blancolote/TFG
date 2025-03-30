@@ -36,7 +36,7 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
 
     class_weights = torch.tensor([0.5, 2]).to(device)
     print(class_logits.dtype)
-    classification_loss = F.cross_entropy(class_logits, labels.float(), weight=class_weights)
+    classification_loss = F.cross_entropy(class_logits.float(), labels.float(), weight=class_weights)
 
     # get indices that correspond to the regression targets for
     # the corresponding ground truth labels, to be used with
