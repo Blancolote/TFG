@@ -884,4 +884,4 @@ class RoIHeads(nn.Module):
                     r["keypoints_scores"] = kps
             losses.update(loss_keypoint)
 
-        return result, losses, class_logits
+        return result, losses

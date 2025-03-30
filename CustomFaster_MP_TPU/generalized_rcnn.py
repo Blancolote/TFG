@@ -118,7 +118,7 @@ class GeneralizedRCNN(nn.Module):
         if isinstance(features, torch.Tensor):
             features = OrderedDict([("0", features)])
         proposals, proposal_losses = self.rpn(new_images, features, targets)
-        detections, detector_losses, class_logits = self.roi_heads(features, proposals, new_images.image_sizes, targets)
+        detections, detector_losses = self.roi_heads(features, proposals, new_images.image_sizes, targets)
         
         #bloque modificado--> no se hace postprocess aquí porque las imágenes ya está redimensionadas
         #detections = self.transform.postprocess(detections, new_images.size(), original_image_sizes)  # type: ignore[operator]
@@ -133,4 +133,4 @@ class GeneralizedRCNN(nn.Module):
                 self._has_warned = True
             return losses, detections, logits
         else:
-            return self.eager_outputs(losses, detections), logits, class_logits
+            return self.eager_outputs(losses, detections), logits
