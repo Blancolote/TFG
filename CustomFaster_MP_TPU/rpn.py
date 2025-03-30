@@ -352,11 +352,6 @@ class RegionProposalNetwork(torch.nn.Module):
         # Obtener los pesos correspondientes
         sampled_weights = class_weights[sampled_classes]
 
-        # Verificar formas
-        print("sampled_weights shape:", sampled_weights.shape)  # (N,)
-        print("pred_bbox_deltas shape:", pred_bbox_deltas[sampled_pos_inds].shape)  # (N, 4)
-        print("regression_targets shape:", regression_targets[sampled_pos_inds].shape)  # (N, 4)
-
         # Calcular la pérdida Smooth L1 sin reducción
         box_loss = F.smooth_l1_loss(
             pred_bbox_deltas[sampled_pos_inds],
