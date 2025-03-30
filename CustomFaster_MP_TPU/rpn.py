@@ -402,9 +402,9 @@ class RegionProposalNetwork(torch.nn.Module):
                 raise ValueError("targets should not be None")
             labels, matched_gt_boxes = self.assign_targets_to_anchors(anchors, targets)
             regression_targets = self.box_coder.encode(matched_gt_boxes, anchors)
-            print(objectness.shape)
-            print(labels)
-            print(regression_targets)
+            print(f"{objectness.shape}")
+            print(f"Labels: {labels}")
+            print(f"Regresion: {regression_targets}")
  
             loss_objectness, loss_rpn_box_reg = self.compute_loss(
                 objectness, pred_bbox_deltas, labels, regression_targets

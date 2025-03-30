@@ -33,7 +33,6 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
     device = xm.xla_device()
     labels = torch.cat(labels, dim=0)
     regression_targets = torch.cat(regression_targets, dim=0)  
-    print(class_logits)
     classification_loss = F.cross_entropy(class_logits, labels)
 
     # get indices that correspond to the regression targets for
