@@ -344,9 +344,8 @@ class RegionProposalNetwork(torch.nn.Module):
         labels = torch.cat(labels, dim=0)
         regression_targets = torch.cat(regression_targets, dim=0)
 
-        class_weights = torch.tensor([0.5, 2]).to(device)
+        class_weights = torch.tensor([1.25, 5], device=device)
 
-        
         sampled_classes = labels[sampled_pos_inds].long().to(device)  
 
         # Obtener los pesos correspondientes

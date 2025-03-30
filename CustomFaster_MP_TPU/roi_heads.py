@@ -14,7 +14,7 @@ try:
 except ModuleNotFoundError:
     raise ModuleNotFoundError("xla it can not be imported because is not resolved or the enviroment is not with TPU")
 
-#bloque modificado --> se ha cambiado cross_entropy por binary_cross_entropy_with_logits
+#bloque modificado --> se ha añadido ponderaciones por pesos para las losses
 def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
     # type: (Tensor, Tensor, List[Tensor], List[Tensor]) -> Tuple[Tensor, Tensor]
     """
@@ -34,8 +34,8 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
     labels = torch.cat(labels, dim=0)
     regression_targets = torch.cat(regression_targets, dim=0)  
 
-    pos_weight = torch.tensor([3.0], device=device) #le doy tres veces más de importancia a las anclas positivas
-    classification_loss = F.binary_cross_entropy_with_logits(class_logits, labels, pos_weight=pos_weight)
+    class_weights = torch.tensor([0.5, 2]).to(device)
+    classification_loss = F.cross_entropy(class_logits[:,1], labels, pweight=class_weights)
 
     # get indices that correspond to the regression targets for
     # the corresponding ground truth labels, to be used with
@@ -45,7 +45,7 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
     N, num_classes = class_logits.shape
     box_regression = box_regression.reshape(N, box_regression.size(-1) // 4, 4)
     
-    class_weights = torch.tensor([0.5, 2]).to(device)
+    class_weights = torch.tensor([1.25, 5], device=device)
 
     sampled_weights = class_weights[labels_pos].to(device)  
 
