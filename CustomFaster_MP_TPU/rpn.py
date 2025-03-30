@@ -351,10 +351,8 @@ class RegionProposalNetwork(torch.nn.Module):
             reduction='none',
         ) / (sampled_inds.numel())
 
-        print(box_loss.shape)
 
-        anchor_weights = torch.where(labels == 1, torch.tensor(3.0, device=device), torch.tensor(1.0, device=device))
-        print(anchor_weights.shape)
+        anchor_weights = torch.where(labels == 1, torch.tensor(3.0, device=device), torch.tensor(1.0, device=device)).unsqueeze(0)
 
         box_loss = (box_loss * anchor_weights).mean()
 
