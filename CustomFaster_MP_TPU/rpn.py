@@ -346,11 +346,11 @@ class RegionProposalNetwork(torch.nn.Module):
 
         class_weights = torch.tensor([0.5, 2]).to(device)
 
-        # Obtener las clases de los índices positivos
-        sampled_classes = labels[sampled_pos_inds]  # Asume que `labels` tiene las clases
+        
+        sampled_classes = labels[sampled_pos_inds].to(device)  
 
         # Obtener los pesos correspondientes
-        sampled_weights = class_weights[sampled_classes]
+        sampled_weights = class_weights[sampled_classes].to(device)
 
         # Calcular la pérdida Smooth L1 sin reducción
         box_loss = F.smooth_l1_loss(

@@ -47,7 +47,7 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
     
     class_weights = torch.tensor([0.5, 2]).to(device)
 
-    sampled_weights = class_weights[labels_pos]  
+    sampled_weights = class_weights[labels_pos].to(device)  
 
     box_loss = F.smooth_l1_loss(
         box_regression[sampled_pos_inds_subset, labels_pos],
