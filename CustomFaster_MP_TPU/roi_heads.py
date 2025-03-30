@@ -8,7 +8,13 @@ from .ops import boxes as box_ops, roi_align
 
 from . import _utils as det_utils
 
+try: 
+    import torch_xla
+    import torch_xla.core.xla_model as xm
+except ModuleNotFoundError:
+    raise ModuleNotFoundError("xla it can not be imported because is not resolved or the enviroment is not with TPU")
 
+#bloque modificado --> se ha cambiado cross_entropy por binary_cross_entropy_with_logits
 def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
     # type: (Tensor, Tensor, List[Tensor], List[Tensor]) -> Tuple[Tensor, Tensor]
     """
@@ -24,11 +30,12 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
         classification_loss (Tensor)
         box_loss (Tensor)
     """
-
+    device = labels.device
     labels = torch.cat(labels, dim=0)
-    regression_targets = torch.cat(regression_targets, dim=0)
+    regression_targets = torch.cat(regression_targets, dim=0)  
 
-    classification_loss = F.cross_entropy(class_logits, labels)
+    pos_weight = torch.tensor([3.0], device=device) #le doy tres veces más de importancia a las anclas positivas
+    classification_loss = F.binary_cross_entropy_with_logits(class_logits, labels, pos_weight=pos_weight)
 
     # get indices that correspond to the regression targets for
     # the corresponding ground truth labels, to be used with
@@ -45,6 +52,10 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
         reduction="sum",
     )
     box_loss = box_loss / labels.numel()
+
+    anchor_weights = torch.where(labels == 1, torch.tensor(3.0, device=device), torch.tensor(1.0, device=device))
+
+    box_loss = (box_loss * anchor_weights).mean()
 
     return classification_loss, box_loss
 

@@ -9,6 +9,12 @@ from torchvision.ops import Conv2dNormActivation
 
 from . import _utils as det_utils
 
+try: 
+    import torch_xla
+    import torch_xla.core.xla_model as xm
+except ModuleNotFoundError:
+    raise ModuleNotFoundError("xla it can not be imported because is not resolved or the enviroment is not with TPU")
+
 
 # Import AnchorGenerator to keep compatibility.
 from .anchor_utils import AnchorGenerator  # noqa: 401
@@ -301,14 +307,15 @@ class RegionProposalNetwork(torch.nn.Module):
             boxes, scores = boxes[keep], scores[keep]
 
             #bloque modificado --> se vuelven a convertir en float32 para evitar inconsistencias
-            if original_dtype != torch.float32:
-                boxes = boxes.to(torch.float32)
-                scores = scores.to(torch.float32)
+            
+            boxes = boxes.to(torch.float32)
+            scores = scores.to(torch.float32)
 
             final_boxes.append(boxes)
             final_scores.append(scores)
         return final_boxes, final_scores
 
+    #bloque modificado --> se han modificado los pesos de las pérdidas para adapatarlas a las clases desbalanceadas
     def compute_loss(
         self, objectness: Tensor, pred_bbox_deltas: Tensor, labels: List[Tensor], regression_targets: List[Tensor]
     ) -> Tuple[Tensor, Tensor]:
@@ -324,7 +331,7 @@ class RegionProposalNetwork(torch.nn.Module):
             objectness_loss (Tensor)
             box_loss (Tensor)
         """
-
+        device = xm.xla_device()
         sampled_pos_inds, sampled_neg_inds = self.fg_bg_sampler(labels)
     
         sampled_pos_inds = torch.where(torch.cat(sampled_pos_inds, dim=0))[0].to(torch.int32)
@@ -341,10 +348,16 @@ class RegionProposalNetwork(torch.nn.Module):
             pred_bbox_deltas[sampled_pos_inds],
             regression_targets[sampled_pos_inds],
             beta=1 / 9,
-            reduction="sum",
+            reduction='none',
         ) / (sampled_inds.numel())
 
-        objectness_loss = F.binary_cross_entropy_with_logits(objectness[sampled_inds], labels[sampled_inds])
+        anchor_weights = torch.where(labels == 1, torch.tensor(3.0, device=device), torch.tensor(1.0, device=device))
+
+        box_loss = (box_loss * anchor_weights).mean()
+
+        pos_weight = torch.tensor([3.0], device=device) #le doy tres veces más de importancia a las anclas positivas
+
+        objectness_loss = F.binary_cross_entropy_with_logits(objectness[sampled_inds], labels[sampled_inds], pos_weight=pos_weight)
 
         return objectness_loss, box_loss
 
