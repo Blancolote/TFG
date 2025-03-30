@@ -33,7 +33,7 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
     device = xm.xla_device()
     labels = torch.cat(labels, dim=0)
     regression_targets = torch.cat(regression_targets, dim=0)  
-
+    print(class_logits)
     classification_loss = F.cross_entropy(class_logits, labels)
 
     # get indices that correspond to the regression targets for
@@ -50,7 +50,7 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
         beta=1 / 9,
         reduction="sum",
     )
-    
+
     box_loss = box_loss / labels.numel()
     anchor_weights = torch.where(labels == 1, torch.tensor(3.0, device=device), torch.tensor(1.0, device=device))
 
@@ -884,4 +884,4 @@ class RoIHeads(nn.Module):
                     r["keypoints_scores"] = kps
             losses.update(loss_keypoint)
 
-        return result, losses
+        return result, losses, class_logits

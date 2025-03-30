@@ -343,30 +343,13 @@ class RegionProposalNetwork(torch.nn.Module):
 
         labels = torch.cat(labels, dim=0)
         regression_targets = torch.cat(regression_targets, dim=0)
-
-        class_weights = torch.tensor([1.25, 5], device=device)
-
-        sampled_classes = labels[sampled_pos_inds].long().to(device)  
-
-        # Obtener los pesos correspondientes
-        sampled_weights = class_weights[sampled_classes].to(device)
-
-        # Calcular la pérdida Smooth L1 sin reducción
+ 
         box_loss = F.smooth_l1_loss(
             pred_bbox_deltas[sampled_pos_inds],
             regression_targets[sampled_pos_inds],
             beta=1 / 9,
-            reduction='none',
-        )
-
-        # Ajustar dimensiones para evitar errores
-        sampled_weights = sampled_weights.unsqueeze(1)  # Convertir (N,) → (N,1)
-
-        # Multiplicar por los pesos (asegurando tipo float32 en XLA)
-        box_loss = box_loss.to(torch.float32) * sampled_weights.to(torch.float32)
-
-        # Reducir la pérdida
-        box_loss = box_loss.mean()
+            reduction="sum",
+        ) / (sampled_inds.numel())
 
         pos_weight = torch.tensor([3.0], device=device) #le doy tres veces más de importancia a las anclas positivas
 
