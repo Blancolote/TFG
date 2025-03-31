@@ -37,8 +37,9 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
     class_counts = torch.bincount(labels)
     class_weights = 1.0 / (class_counts.float() + 1e-8)
     class_weights = class_weights / class_weights.mean()
+    class_weights = class_weights.to(device)
 
-    classification_loss = F.cross_entropy(class_logits, labels, weight=class_weights.to(device))
+    classification_loss = F.cross_entropy(class_logits, labels, weight=class_weights)
 
     # get indices that correspond to the regression targets for
     # the corresponding ground truth labels, to be used with
