@@ -33,7 +33,12 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
     device = xm.xla_device()
     labels = torch.cat(labels, dim=0)
     regression_targets = torch.cat(regression_targets, dim=0)  
-    classification_loss = F.cross_entropy(class_logits, labels)
+
+    class_counts = torch.bincount(labels)
+    class_weights = 1.0 / (class_counts.float() + 1e-8)
+    class_weights = class_weights / class_weights.mean()
+
+    classification_loss = F.cross_entropy(class_logits, labels, weight=class_weights.to(device))
 
     # get indices that correspond to the regression targets for
     # the corresponding ground truth labels, to be used with
@@ -47,11 +52,11 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
         box_regression[sampled_pos_inds_subset, labels_pos],
         regression_targets[sampled_pos_inds_subset],
         beta=1 / 9,
-        reduction="sum",
+        reduction="none",
     )
 
     box_loss = box_loss / labels.numel()
-    anchor_weights = torch.where(labels == 1, torch.tensor(3.0, device=device), torch.tensor(1.0, device=device))
+    anchor_weights = torch.where(labels == 1, torch.tensor(class_weights[1], device=device), torch.tensor(class_weights[0], device=device))
 
     box_loss = (box_loss * anchor_weights).mean()
 
