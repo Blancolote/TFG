@@ -96,7 +96,7 @@ class BalancedPositiveNegativeSampler:
 
         return pos_idx, neg_idx
 
-
+#bloque modificado --> como la resta de las cajas es 0, causaba -inf o nan en la pérdida, por eso se ha puesto un valor mínimo
 @torch.jit._script_if_tracing
 def encode_boxes(reference_boxes: Tensor, proposals: Tensor, weights: Tensor) -> Tensor:
     """
@@ -126,13 +126,13 @@ def encode_boxes(reference_boxes: Tensor, proposals: Tensor, weights: Tensor) ->
     reference_boxes_y2 = reference_boxes[:, 3].unsqueeze(1)
 
     # implementation starts here
-    ex_widths = proposals_x2 - proposals_x1
-    ex_heights = proposals_y2 - proposals_y1
+    ex_widths = torch.clamp(proposals_x2 - proposals_x1, min=1e-6)
+    ex_heights = torch.clamp(proposals_y2 - proposals_y1, min=1e-6)
     ex_ctr_x = proposals_x1 + 0.5 * ex_widths
     ex_ctr_y = proposals_y1 + 0.5 * ex_heights
 
-    gt_widths = reference_boxes_x2 - reference_boxes_x1
-    gt_heights = reference_boxes_y2 - reference_boxes_y1
+    gt_widths = torch.clamp(reference_boxes_x2 - reference_boxes_x1, min=1e-6)
+    gt_heights = torch.clamp(reference_boxes_y2 - reference_boxes_y1, min=1e-6)
     gt_ctr_x = reference_boxes_x1 + 0.5 * gt_widths
     gt_ctr_y = reference_boxes_y1 + 0.5 * gt_heights
 
