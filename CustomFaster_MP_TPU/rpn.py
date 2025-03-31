@@ -354,7 +354,8 @@ class RegionProposalNetwork(torch.nn.Module):
             reduction="none",
         ) / (sampled_inds.numel())
 
-        box_loss = box_loss * class_weights[labels.to(torch.int8)]
+        labels = labels.to(torch.long)
+        box_loss = box_loss * class_weights[labels]
 
         pos_weight = torch.tensor([3.0], device=device) #le doy tres veces más de importancia a las anclas positivas
 
