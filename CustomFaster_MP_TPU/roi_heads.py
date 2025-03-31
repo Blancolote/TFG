@@ -53,13 +53,10 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
         box_regression[sampled_pos_inds_subset, labels_pos],
         regression_targets[sampled_pos_inds_subset],
         beta=1 / 9,
-        reduction="none",
+        reduction="sum",
     )
 
     box_loss = box_loss / labels.numel()
-    anchor_weights = torch.where(labels == 1, torch.tensor(class_weights[1], device=device), torch.tensor(class_weights[0], device=device))
-
-    box_loss = (box_loss * anchor_weights).mean()
 
     return classification_loss, box_loss
 
