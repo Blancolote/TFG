@@ -314,6 +314,19 @@ class RegionProposalNetwork(torch.nn.Module):
             final_boxes.append(boxes)
             final_scores.append(scores)
         return final_boxes, final_scores
+    
+    #bloque modificado --> función para cargar pesos inversamente proporcionales a la frecuencia
+    def calculate_class_weights(self, labels, device):
+    
+        labels = labels.view(-1).to(torch.long)
+        
+        class_counts = torch.bincount(labels)
+        
+        weights = 1.0 / (class_counts.float() + 1e-8)
+        
+        weights = weights / weights.mean()
+        
+        return weights.to(device)
 
     #bloque modificado --> se han modificado los pesos de las pérdidas para adapatarlas a las clases desbalanceadas
     def compute_loss(
@@ -344,8 +357,7 @@ class RegionProposalNetwork(torch.nn.Module):
         labels = torch.cat(labels, dim=0)
         regression_targets = torch.cat(regression_targets, dim=0)
 
-        class_weights = torch.tensor([1.0] + [2.0] * (2 - 1))  #2 es el número de clases
-        class_weights = class_weights.to(device)
+        class_weights = self.calculate_class_weights(labels, device)
         
         box_loss = F.smooth_l1_loss(
             pred_bbox_deltas[sampled_pos_inds],
@@ -354,8 +366,20 @@ class RegionProposalNetwork(torch.nn.Module):
             reduction="none",
         ) / (sampled_inds.numel())
 
-        labels = labels.to(torch.long)
-        box_loss = box_loss * class_weights[labels]
+        labels = labels.view(-1).to(torch.long)
+        if len(box_loss.shape) > 1:
+            box_loss = box_loss.mean(dim=-1)
+    
+        # Aplicar pesos de clase
+        try:
+            # Intentar indexar directamente
+            weighted_box_loss = box_loss * class_weights[labels]
+        except RuntimeError:
+            # Método alternativo si falla la indexación
+            weighted_box_loss = box_loss * torch.gather(class_weights, 0, labels)
+    
+        # Calcular pérdida promedio
+        box_loss = weighted_box_loss.mean()
 
         pos_weight = torch.tensor([3.0], device=device) #le doy tres veces más de importancia a las anclas positivas
 
