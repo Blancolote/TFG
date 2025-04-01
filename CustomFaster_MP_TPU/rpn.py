@@ -357,16 +357,19 @@ class RegionProposalNetwork(torch.nn.Module):
         labels = torch.cat(labels, dim=0)
         regression_targets = torch.cat(regression_targets, dim=0)
 
+        num_pos = sampled_pos_inds.numel()
+        num_neg = sampled_neg_inds.numel()
+
+        factor_weight = torch.tensor(num_neg/ num_pos, device=device)
         
-        
-        box_loss = F.smooth_l1_loss(
+        box_loss = factor_weight *  F.smooth_l1_loss(
             pred_bbox_deltas[sampled_pos_inds],
             regression_targets[sampled_pos_inds],
             beta=1 / 9,
             reduction="sum",
         ) / (sampled_inds.numel())
 
-        pos_weight = torch.tensor([3.0], device=device) #le doy tres veces más de importancia a las anclas positivas
+        pos_weight = torch.tensor([4.0], device=device) #le doy tres veces más de importancia a las anclas positivas
 
         objectness_loss = F.binary_cross_entropy_with_logits(objectness[sampled_inds], labels[sampled_inds], pos_weight=pos_weight)
 

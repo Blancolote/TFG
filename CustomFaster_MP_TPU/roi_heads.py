@@ -49,12 +49,15 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
     N, num_classes = class_logits.shape
     box_regression = box_regression.reshape(N, box_regression.size(-1) // 4, 4)
     
-    box_loss = F.smooth_l1_loss(
+    box_weights = class_weights[labels_pos]  # Extraer los pesos de las clases positivas
+    box_weights = box_weights.unsqueeze(-1)
+
+    box_loss = box_weights * F.smooth_l1_loss(
         box_regression[sampled_pos_inds_subset, labels_pos],
         regression_targets[sampled_pos_inds_subset],
         beta=1 / 9,
-        reduction="sum",
-    )
+        reduction="none",
+    ).sum()
 
     box_loss = box_loss / labels.numel()
 
