@@ -360,7 +360,10 @@ class RegionProposalNetwork(torch.nn.Module):
         num_pos = sampled_pos_inds.numel()
         num_neg = sampled_neg_inds.numel()
 
-        factor_weight = torch.tensor(num_neg/ num_pos, device=device)
+        try:
+            factor_weight = torch.tensor(num_neg/ num_pos, device=device)
+        except ZeroDivisionError:
+            factor_weight = torch.tensor(0.0, device=device)
         
         box_loss = factor_weight *  F.smooth_l1_loss(
             pred_bbox_deltas[sampled_pos_inds],
