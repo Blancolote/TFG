@@ -54,12 +54,12 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
     else:
         box_weights = class_weights.mean().unsqueeze(-1)
 
-    box_loss = box_weights * F.smooth_l1_loss(
+    box_loss = (box_weights * F.smooth_l1_loss(
         box_regression[sampled_pos_inds_subset, labels_pos],
         regression_targets[sampled_pos_inds_subset],
         beta=1 / 9,
         reduction="none",
-    ).sum()
+    )).sum()
 
     box_loss = box_loss / labels.numel()
 
