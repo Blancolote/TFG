@@ -161,8 +161,8 @@ class FasterRCNN(GeneralizedRCNN):
         rpn_pre_nms_top_n_test=1000,
         rpn_post_nms_top_n_train=2000,
         rpn_post_nms_top_n_test=1000,
-        rpn_nms_thresh=0.7,
-        rpn_fg_iou_thresh=0.7,
+        rpn_nms_thresh=0.7, 
+        rpn_fg_iou_thresh=0.5, #bloque modificado --> se ha bajado el valor de 0.7 a 0.5 para que más anclas sean positivas
         rpn_bg_iou_thresh=0.3,
         rpn_batch_size_per_image=256,
         rpn_positive_fraction=0.5,
