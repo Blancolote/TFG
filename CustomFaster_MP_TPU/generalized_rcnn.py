@@ -42,6 +42,10 @@ class GeneralizedRCNN(nn.Module):
         self.roi_heads = roi_heads
         # used only on torchscript mode
         self._has_warned = False
+        try:
+            self.device = xm.xla_device()
+        except:
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     @torch.jit.unused
     def eager_outputs(self, losses, detections):
@@ -111,14 +115,14 @@ class GeneralizedRCNN(nn.Module):
         #bloque modificado --> se añaden los logits del módulo de atención para que el modelo los devuelva y se tomarán como únicas imágenes los slices más representativos
         features, logits, new_images = self.backbone(images)
         #bloque modificado --> se ha añadido una función que cambia las images de tensores a ImageList
-        new_images = transformToImageList(new_images, xm.xla_device())
+        new_images = transformToImageList(new_images, self.device)
         #poner comprobación de logits
         
         #bloque modificado --> ahora el parámetro images ha sido sustituido por new_images
         if isinstance(features, torch.Tensor):
             features = OrderedDict([("0", features)])
         proposals, proposal_losses = self.rpn(new_images, features, targets)
-        detections, detector_losses = self.roi_heads(features, proposals, new_images.image_sizes, targets)
+        detections, detector_losses = self.roi_heads(features, proposals.to(torch.bfloat16), new_images.image_sizes, targets)
         
         #bloque modificado--> no se hace postprocess aquí porque las imágenes ya está redimensionadas
         #detections = self.transform.postprocess(detections, new_images.size(), original_image_sizes)  # type: ignore[operator]
