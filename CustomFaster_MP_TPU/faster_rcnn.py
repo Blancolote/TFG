@@ -157,12 +157,12 @@ class FasterRCNN(GeneralizedRCNN):
         # RPN parameters
         rpn_anchor_generator=None,
         rpn_head=None,
-        rpn_pre_nms_top_n_train=800, #bloque modificado --> se han bajado el número de propuesta de train y test
-        rpn_pre_nms_top_n_test=300,
-        rpn_post_nms_top_n_train=800,
-        rpn_post_nms_top_n_test=300,
+        rpn_pre_nms_top_n_train=300, #bloque modificado --> se han bajado el número de propuesta de train y test
+        rpn_pre_nms_top_n_test=100,
+        rpn_post_nms_top_n_train=300,
+        rpn_post_nms_top_n_test=100,
         rpn_nms_thresh=0.7, 
-        rpn_fg_iou_thresh=0.7, #bloque modificado --> se ha bajado el valor de 0.7 a 0.5 para que más anclas sean positivas
+        rpn_fg_iou_thresh=0.7, 
         rpn_bg_iou_thresh=0.3,
         rpn_batch_size_per_image=256,
         rpn_positive_fraction=0.5,
