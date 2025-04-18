@@ -12,7 +12,7 @@ try:
     import torch_xla
     import torch_xla.core.xla_model as xm
 except ModuleNotFoundError:
-    raise ModuleNotFoundError("xla it can not be imported because is not resolved or the enviroment is not with TPU")
+    print("xla it can not be imported because is not resolved or the enviroment is not with TPU")
 
 #bloque modificado --> se ha añadido ponderaciones por pesos para las losses
 def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
@@ -30,7 +30,7 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
         classification_loss (Tensor)
         box_loss (Tensor)
     """
-    device = xm.xla_device()
+    device = labels.device
     labels = torch.cat(labels, dim=0)
     regression_targets = torch.cat(regression_targets, dim=0)  
 
@@ -768,7 +768,8 @@ class RoIHeads(nn.Module):
                 if self.has_keypoint():
                     if not t["keypoints"].dtype == torch.float32:
                         raise TypeError(f"target keypoints must of float type, instead got {t['keypoints'].dtype}")
-
+        #bloque modificado --> se ha pasado a bfloat16 la variable proposals
+        proposals = [p.to(dtype=torch.bfloat16) for p in proposals]
         if self.training:
             proposals, matched_idxs, labels, regression_targets = self.select_training_samples(proposals, targets)
         else:

@@ -12,6 +12,12 @@ from torchvision.extension import _assert_has_ops, _has_ops
 from ..utils import _log_api_usage_once
 from ._utils import check_roi_boxes_shape, convert_boxes_to_roi_format
 
+try: 
+    import torch_xla
+    import torch_xla.core.xla_model as xm
+except ModuleNotFoundError:
+    print("xla it can not be imported because is not resolved or the enviroment is not with TPU")
+
 
 def lazy_compile(**compile_kwargs):
     """Lazily wrap a function with torch.compile on the first call
@@ -244,8 +250,7 @@ def roi_align(
     if not torch.jit.is_scripting() and not torch.jit.is_tracing():
         _log_api_usage_once(roi_align)
     check_roi_boxes_shape(boxes)
-    rois = boxes.to(torch.bfloat16)
-    input = input.to(torch.bfloat16)
+    
     output_size = _pair(output_size)
     if not isinstance(rois, torch.Tensor):
         rois = convert_boxes_to_roi_format(rois)

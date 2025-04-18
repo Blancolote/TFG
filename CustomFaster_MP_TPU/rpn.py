@@ -13,7 +13,7 @@ try:
     import torch_xla
     import torch_xla.core.xla_model as xm
 except ModuleNotFoundError:
-    raise ModuleNotFoundError("xla it can not be imported because is not resolved or the enviroment is not with TPU")
+    print("xla it can not be imported because is not resolved or the enviroment is not with TPU")
 
 
 # Import AnchorGenerator to keep compatibility.
@@ -225,7 +225,7 @@ class RegionProposalNetwork(torch.nn.Module):
                 labels_per_image = matched_idxs >= 0
                 labels_per_image = labels_per_image.to(dtype=torch.float32)
 
-                # Background (negative examples)
+                # Background (negative examples) 
                 bg_indices = matched_idxs == self.proposal_matcher.BELOW_LOW_THRESHOLD
                 labels_per_image[bg_indices] = 0.0
 
@@ -235,6 +235,7 @@ class RegionProposalNetwork(torch.nn.Module):
 
             labels.append(labels_per_image)
             matched_gt_boxes.append(matched_gt_boxes_per_image)
+            
         return labels, matched_gt_boxes
 
     def _get_top_n_idx(self, objectness: Tensor, num_anchors_per_level: List[int]) -> Tensor:
@@ -344,7 +345,7 @@ class RegionProposalNetwork(torch.nn.Module):
             objectness_loss (Tensor)
             box_loss (Tensor)
         """
-        device = xm.xla_device()
+        device = labels.device
         sampled_pos_inds, sampled_neg_inds = self.fg_bg_sampler(labels)
     
         sampled_pos_inds = torch.where(torch.cat(sampled_pos_inds, dim=0))[0].to(torch.int32)
@@ -360,11 +361,8 @@ class RegionProposalNetwork(torch.nn.Module):
         num_pos = sampled_pos_inds.numel()
         num_neg = sampled_neg_inds.numel()
 
-        try:
-            factor_weight = torch.tensor(num_neg/ num_pos, device=device)
-        except ZeroDivisionError:
-            factor_weight = torch.tensor(0.0, device=device)
-        
+        factor_weight = torch.tensor(0.0 if num_pos == 0 else num_neg / num_pos, device=device)
+
         box_loss = factor_weight *  F.smooth_l1_loss(
             pred_bbox_deltas[sampled_pos_inds],
             regression_targets[sampled_pos_inds],

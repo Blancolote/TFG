@@ -36,7 +36,7 @@ class BalancedPositiveNegativeSampler:
             # Usar rand y topk para selección aleatoria
             rand_scores = torch.rand(tensor.numel(), 
                                    dtype=torch.int32, 
-                                   device=xm.xla_device())
+                                   device=tensor.device)
             _, indices = torch.topk(rand_scores,  #topk es más compatible que argsort en TPU
                                   k=min(num_samples, tensor.numel()))
             return tensor[indices.to(torch.int32)]
