@@ -768,8 +768,7 @@ class RoIHeads(nn.Module):
                 if self.has_keypoint():
                     if not t["keypoints"].dtype == torch.float32:
                         raise TypeError(f"target keypoints must of float type, instead got {t['keypoints'].dtype}")
-        #bloque modificado --> se ha pasado a bfloat16 la variable proposals
-        proposals = [p.to(dtype=torch.bfloat16) for p in proposals]
+        
         if self.training:
             proposals, matched_idxs, labels, regression_targets = self.select_training_samples(proposals, targets)
         else:
