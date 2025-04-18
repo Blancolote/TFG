@@ -345,7 +345,7 @@ class RegionProposalNetwork(torch.nn.Module):
             objectness_loss (Tensor)
             box_loss (Tensor)
         """
-        device = labels.device
+        device = objectness.device
         sampled_pos_inds, sampled_neg_inds = self.fg_bg_sampler(labels)
     
         sampled_pos_inds = torch.where(torch.cat(sampled_pos_inds, dim=0))[0].to(torch.int32)
