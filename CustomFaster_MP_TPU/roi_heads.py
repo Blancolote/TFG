@@ -30,7 +30,7 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
         classification_loss (Tensor)
         box_loss (Tensor)
     """
-    device = labels.device
+    device = class_logits.device
     labels = torch.cat(labels, dim=0)
     regression_targets = torch.cat(regression_targets, dim=0)  
 
