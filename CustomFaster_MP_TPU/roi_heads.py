@@ -35,7 +35,7 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
     regression_targets = torch.cat(regression_targets, dim=0)  
 
     class_counts = torch.bincount(labels)
-    class_weights = 1.0 / (class_counts.float() + 1e-8)
+    class_weights = 1.0 / (class_counts.float() + 1e-2)
     class_weights = class_weights / class_weights.mean()
     class_weights = class_weights.to(device)
 
@@ -50,7 +50,7 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
     box_regression = box_regression.reshape(N, box_regression.size(-1) // 4, 4)
     
     if labels_pos.numel() > 0:
-        box_weights = class_weights[labels_pos].unsqueeze(-1)
+        box_weights = class_weights[labels_pos].clamp(max=5.0).unsqueeze(-1)
     else:
         box_weights = class_weights.mean().unsqueeze(-1)
 
