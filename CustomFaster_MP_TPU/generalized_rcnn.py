@@ -122,7 +122,6 @@ class GeneralizedRCNN(nn.Module):
         if isinstance(features, torch.Tensor):
             features = OrderedDict([("0", features)])
         proposals, proposal_losses = self.rpn(new_images, features, targets)
-        print(new_images.image_sizes)
         detections, detector_losses = self.roi_heads(features, proposals, new_images.image_sizes, targets)
         
         #bloque modificado--> no se hace postprocess aquí porque las imágenes ya está redimensionadas
