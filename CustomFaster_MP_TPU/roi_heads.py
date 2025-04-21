@@ -660,7 +660,7 @@ class RoIHeads(nn.Module):
         gt_labels = [t["labels"] for t in targets]
 
         # append ground-truth bboxes to propos
-        proposals = self.add_gt_proposals(proposals, gt_boxes)
+        proposals = self.add_gt_proposals(proposals.to(device), gt_boxes.to(device))
 
         # get matching gt indices for each proposal
         matched_idxs, labels = self.assign_targets_to_proposals(proposals, gt_boxes, gt_labels)
