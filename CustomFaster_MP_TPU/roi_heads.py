@@ -656,7 +656,7 @@ class RoIHeads(nn.Module):
         dtype = proposals[0].dtype
         device = proposals[0].device
 
-        gt_boxes = [t["boxes"].to(dtype) for t in targets]
+        gt_boxes = [t["boxes"].to(dtype).to(device) for t in targets]
         gt_labels = [t["labels"] for t in targets]
 
         # append ground-truth bboxes to propos
