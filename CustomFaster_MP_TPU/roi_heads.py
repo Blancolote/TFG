@@ -628,7 +628,8 @@ class RoIHeads(nn.Module):
 
     def add_gt_proposals(self, proposals, gt_boxes):
         # type: (List[Tensor], List[Tensor]) -> List[Tensor]
-        proposals = [torch.cat((proposal, gt_box)) for proposal, gt_box in zip(proposals, gt_boxes)]
+        device = proposals[0].device
+        proposals = [torch.cat((proposal.to(device), gt_box.to(device))) for proposal, gt_box in zip(proposals, gt_boxes)]
 
         return proposals
 
@@ -660,7 +661,7 @@ class RoIHeads(nn.Module):
         gt_labels = [t["labels"] for t in targets]
 
         # append ground-truth bboxes to propos
-        proposals = self.add_gt_proposals(proposals.to(device), gt_boxes.to(device))
+        proposals = self.add_gt_proposals(proposals, gt_boxes)
 
         # get matching gt indices for each proposal
         matched_idxs, labels = self.assign_targets_to_proposals(proposals, gt_boxes, gt_labels)
