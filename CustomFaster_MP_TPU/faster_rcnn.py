@@ -166,7 +166,7 @@ class FasterRCNN(GeneralizedRCNN):
         rpn_bg_iou_thresh=0.3,
         rpn_batch_size_per_image=256,
         rpn_positive_fraction=0.5,
-        rpn_score_thresh=0.0,
+        rpn_score_thresh=0.5,
         # Box parameters
         box_roi_pool=None,
         box_head=None,
