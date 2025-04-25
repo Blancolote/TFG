@@ -361,8 +361,8 @@ class RegionProposalNetwork(torch.nn.Module):
         num_pos = sampled_pos_inds.numel()
         num_neg = sampled_neg_inds.numel()
         
-        factor_weight = torch.tensor(0.0 if num_pos == 0 else num_neg / num_pos, device=device)
-        factor_weight = torch.clamp(factor_weight, max=2.0) # Limitar el peso máximo a 2.0 para evitar un aumento excesivo de la pérdida
+        factor_weight = torch.tensor(0.5 if num_pos == 0 else num_neg / num_pos, device=device) #if there are no positive samples, the weight is 0.5, otherwise it is the ratio of negative to positive samples
+        factor_weight = torch.clamp(factor_weight, max=2.0) # the maximum weight is 2.0
 
         box_loss = factor_weight *  F.smooth_l1_loss(
             pred_bbox_deltas[sampled_pos_inds],
